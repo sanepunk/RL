@@ -22,6 +22,13 @@ REINFORCE is a Monte Carlo policy gradient method that directly optimizes the po
   - `reinforce.ipynb` - Jupyter notebook containing the complete implementation
   - `Loss.png` - Training loss visualization
   - `Reward_Over_Time.png` - Training rewards visualization
+  - `anim.gif` - Visualization of trained agent
+
+## Agent in Action
+
+Below is a visualization of our trained REINFORCE agent balancing the pole:
+
+![CartPole Agent](CartPole/anim.gif)
 
 ## Features
 
@@ -51,7 +58,7 @@ Run the Jupyter notebook in the CartPole directory to train the REINFORCE agent 
 ## Dependencies
 
 ```bash
-pip install gymnax jax flax optax wandb tqdm
+pip install gymnax jax flax optax wandb tqdm gymnasium imageio
 ```
 
 ## References
