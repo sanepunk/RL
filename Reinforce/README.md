@@ -16,9 +16,12 @@ REINFORCE is a Monte Carlo policy gradient method that directly optimizes the po
 - **Policy Network**: Multi-layer perceptron with ReLU activations
 - **Optimizer**: Adam optimizer from Optax
 
-## Files
+## Directory Structure
 
-- `reinforce.ipynb` - Jupyter notebook containing the complete implementation
+- `CartPole/` - Implementation for the CartPole environment
+  - `reinforce.ipynb` - Jupyter notebook containing the complete implementation
+  - `Loss.png` - Training loss visualization
+  - `Reward_Over_Time.png` - Training rewards visualization
 
 ## Features
 
@@ -32,14 +35,14 @@ REINFORCE is a Monte Carlo policy gradient method that directly optimizes the po
 The following plots show the training progress of the REINFORCE algorithm:
 
 ### Loss Over Time
-![Loss](Loss.png)
+![Loss](CartPole/Loss.png)
 
 ### Reward Over Time
-![Reward Over Time](Reward_Over_Time.png)
+![Reward Over Time](CartPole/Reward_Over_Time.png)
 
 ## Usage
 
-Run the Jupyter notebook to train the REINFORCE agent on the CartPole environment. The implementation includes:
+Run the Jupyter notebook in the CartPole directory to train the REINFORCE agent on the CartPole environment. The implementation includes:
 - Environment setup
 - Policy network definition
 - Training loop
