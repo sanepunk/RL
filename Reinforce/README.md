@@ -1,6 +1,6 @@
 # REINFORCE Algorithm Implementation
 
-This directory contains an implementation of the REINFORCE algorithm (Williams, 1992) using JAX and Flax.
+This directory contains implementations of the REINFORCE algorithm (Williams, 1992) using JAX and Flax, including a Mixture of Experts (MoE) based REINFORCE variant.
 
 ## Algorithm Overview
 
@@ -18,8 +18,9 @@ REINFORCE is a Monte Carlo policy gradient method that directly optimizes the po
 
 ## Directory Structure
 
-- `CartPole/` - Implementation for the CartPole environment
-  - `reinforce.ipynb` - Jupyter notebook containing the complete implementation
+- `CartPole/` - Implementations for the CartPole environment
+  - `Simple-Reinforce.ipynb` - Standard REINFORCE algorithm
+  - `MOE-Reinforce.ipynb` - Mixture of Experts based REINFORCE algorithm
   - `Loss.png` - Training loss visualization
   - `Reward_Over_Time.png` - Training rewards visualization
   - `anim.gif` - Visualization of trained agent
@@ -41,11 +42,8 @@ Below is a visualization of our trained REINFORCE agent balancing the pole:
 
 The following plots show the training progress of the REINFORCE algorithm:
 
-### Loss Over Time
-![Loss](CartPole/Loss.png)
-
-### Reward Over Time
-![Reward Over Time](CartPole/Reward_Over_Time.png)
+### Network Analysis
+![Network Image](CartPole/network_comparison.png)
 
 ## Usage
 
