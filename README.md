@@ -4,8 +4,13 @@ This repository contains implementations of various reinforcement learning algor
 
 ## Structure
 
-- `Reinforce/` - Contains REINFORCE algorithm implementation
-  - Implementation uses JAX/Flax for the CartPole environment
+- `Bandits/` - Contains Multi-Armed Bandit algorithm implementations
+  - UCB (Upper Confidence Bound) algorithm
+  
+- `Policy Gradients/` - Contains Policy Gradient algorithm implementations
+  - `Reinforce/` - REINFORCE algorithm implementation
+    - Implementation uses JAX/Flax for the CartPole environment
+    - Includes both Simple and MOE (Mixture of Experts) variants
 
 ## Getting Started
 
