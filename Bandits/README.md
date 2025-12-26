@@ -19,6 +19,26 @@ The UCB algorithm is an optimistic approach that selects arms based on both thei
 - Logarithmic regret bounds
 - No tuning parameters needed beyond the confidence level
 
+### Epsilon-Greedy Strategy
+
+The Epsilon-Greedy algorithm is a simple yet effective approach that balances exploration and exploitation using a probability parameter ε (epsilon). With probability ε, it explores by choosing a random arm, and with probability (1-ε), it exploits by choosing the arm with the highest estimated value.
+
+**File:** `Epsilon_Greedy_Strategy.ipynb`
+
+**Key Features:**
+- Simple implementation
+- Tunable exploration rate (ε parameter)
+- Good baseline performance
+- Easy to understand and implement
+
+## Results
+
+### Cumulative Rewards Comparison
+
+![Cumulative Rewards Comparison](cumulative_rewards_comparison.png)
+
+The graph above shows the cumulative rewards over time for both UCB and Epsilon-Greedy strategies, demonstrating their performance characteristics.
+
 ## Usage
 
 Open the Jupyter notebooks to see detailed implementations, explanations, and visualizations of the bandit algorithms in action.
