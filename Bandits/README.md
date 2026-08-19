@@ -35,7 +35,7 @@ The Epsilon-Greedy algorithm is a simple yet effective approach that balances ex
 
 ### Cumulative Rewards Comparison
 
-![Cumulative Rewards Comparison](cumulative_rewards_comparison.png)
+![Cumulative Rewards Comparison](assets/cumulative_rewards_comparison.png)
 
 The graph above shows the cumulative rewards over time for both UCB and Epsilon-Greedy strategies, demonstrating their performance characteristics.
 
