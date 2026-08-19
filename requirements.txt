@@ -1,0 +1,7 @@
+tqdm==4.67.1
+optax==0.2.6
+jax==0.8.2
+gymnax==0.0.9
+flax==0.12.2
+matplotlib==3.10.8
+numpy==2.4.0
