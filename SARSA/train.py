@@ -1,29 +1,27 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from model import ActionValueNet
-from jax import numpy as jnp
 import jax
 from flax import nnx
 from tqdm import tqdm
-from utils import *
+from utils import get_env, update
 import optax
 
 env, env_params = get_env()
-agent = ActionValueNet(env.observation_space(env_params).shape[0], env.action_space(env_params).n, nnx.Rngs(44))
-
-optimizer = optax.adam(
-    learning_rate=3e-3
+agent = ActionValueNet(
+    env.observation_space(env_params).shape[0],
+    env.action_space(env_params).n,
+    nnx.Rngs(44),
 )
 
-optimizer = nnx.Optimizer(
-    agent, 
-    optimizer,
-    wrt=nnx.Param
-)
+optax_optim = optax.adam(learning_rate=3e-3)
+
+nnx_optimizer = nnx.Optimizer(agent, optax_optim, wrt=nnx.Param)
+
 
 def train(model: ActionValueNet, optimizer):
     rng = jax.random.PRNGKey(22)
-    greedy_prob = 0.3 
+    greedy_prob = 0.3
     episodic_rewards = []
     with tqdm(range(1000)) as pbar:
         for i in pbar:
@@ -32,17 +30,37 @@ def train(model: ActionValueNet, optimizer):
 
             rng, reset_rng, action_rng = jax.random.split(rng, 3)
             obs, state = env.reset(reset_rng, env_params)
-            action = model.epsilon_greedy_strategy(obs, epsilon=greedy_prob, rngs=action_rng)
+            action = model.epsilon_greedy_strategy(
+                obs, epsilon=greedy_prob, rngs=action_rng
+            )
 
-            episodic_reward = 0.
+            episodic_reward = 0.0
             while True:
                 rng, next_ac, step_key = jax.random.split(rng, 3)
-                next_obs, next_state, reward, done, _ = env.step(step_key, state, action, env_params)
-                next_action = model.epsilon_greedy_strategy(next_obs, epsilon=greedy_prob, rngs=next_ac)
+                next_obs, next_state, reward, done, _ = env.step(
+                    step_key, state, action, env_params
+                )
+                next_action = model.epsilon_greedy_strategy(
+                    next_obs, epsilon=greedy_prob, rngs=next_ac
+                )
 
-                update(model, obs, next_obs, reward, action, next_action, done, 0.99, optimizer)
+                update(
+                    model,
+                    obs,
+                    next_obs,
+                    reward,
+                    action,
+                    next_action,
+                    done,
+                    0.99,
+                    optimizer,
+                )
 
-                obs, state, action = next_obs, next_state, next_action  # carry the action forward — this is the fix
+                obs, state, action = (
+                    next_obs,
+                    next_state,
+                    next_action,
+                )  # carry the action forward — this is the fix
                 episodic_reward += reward
                 if done:
                     break
@@ -52,8 +70,8 @@ def train(model: ActionValueNet, optimizer):
             if episodic_reward > 490:
                 break
 
-
     plt.plot(np.arange(len(episodic_rewards)), episodic_rewards)
     plt.show()
 
-train(agent, optimizer)
+
+train(agent, nnx_optimizer)
