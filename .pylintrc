@@ -1,0 +1,6 @@
+[MASTER]
+# Add paths to search for modules
+init-hook='import sys; sys.path.extend(["/home/runner/work/RL/RL", "/home/runner/work/RL/RL/Policy Gradients/Reinforce/parallel-jax", "/home/runner/work/RL/RL/Policy Gradients/Reinforce/standard/CartPole", "/home/runner/work/RL/RL/Bandits"])'
+
+# Ignore directories that don't have __init__.py
+ignore-patterns=test_.*?py
