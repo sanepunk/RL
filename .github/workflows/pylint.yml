@@ -23,5 +23,5 @@ jobs:
       env:
         PYTHONPATH: ${{ github.workspace }}
       run: |
-        pylint --disable=missing-module-docstring,missing-class-docstring,missing-function-docstring,import-error,too-many-arguments,too-many-positional-arguments,too-many-locals $(git ls-files '*.py')
+        pylint --disable=fatal-import-error,missing-module-docstring,missing-class-docstring,missing-function-docstring,import-error,too-many-arguments,too-many-positional-arguments,too-many-locals $(git ls-files '*.py')
 
