@@ -19,7 +19,7 @@ class ActionValueNet(nnx.Module):
         self, obs, epsilon=0.7, rngs: jax.random.PRNGKey = jax.random.PRNGKey(22)
     ):
         choice_key, selection_key = jax.random.split(rngs)
-        x = self.__call__(obs)
+        x = self(obs)
         choice = jax.random.uniform(choice_key) > epsilon
         return jax.lax.select(
             choice,

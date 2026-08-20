@@ -14,9 +14,9 @@ agent = ActionValueNet(
     nnx.Rngs(44),
 )
 
-optimizer = optax.adam(learning_rate=3e-3)
+optax_optim = optax.adam(learning_rate=3e-3)
 
-optimizer = nnx.Optimizer(agent, optimizer, wrt=nnx.Param)
+nnx_optimizer = nnx.Optimizer(agent, optax_optim, wrt=nnx.Param)
 
 
 def train(model: ActionValueNet, optimizer):
@@ -74,4 +74,4 @@ def train(model: ActionValueNet, optimizer):
     plt.show()
 
 
-train(agent, optimizer)
+train(agent, nnx_optimizer)
