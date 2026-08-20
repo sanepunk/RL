@@ -20,5 +20,7 @@ jobs:
         pip install -r requirements.txt
         pip install pylint
     - name: Analysing the code with pylint
+      env:
+        PYTHONPATH: ${{ github.workspace }}
       run: |
         pylint --disable=missing-module-docstring,missing-class-docstring,missing-function-docstring,import-error,too-many-arguments,too-many-positional-arguments,too-many-locals $(git ls-files '*.py')
