@@ -2,3 +2,4 @@ Policy Gradients/Reinforce/Cartpole/Data/
 checkpoints/
 *.json
 Bandits/calculate_py.ipynb
+.venv/
