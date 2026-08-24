@@ -3,3 +3,4 @@ checkpoints/
 *.json
 Bandits/calculate_py.ipynb
 .venv/
+__pycache__/
