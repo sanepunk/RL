@@ -1,91 +1,60 @@
-from typing import Any
-
 from model import ActorCriticNetwork
 from flax import nnx
 import jax
-from jax import numpy as jnp
 
 
-def calculate_returns(rewards, gamma: float = 0.99, mask=None):
-    def step_fn(R, data):
-        reward, mask = data
-        R = reward + R * gamma * mask
-        return R, R
+def critic_loss(
+    model: ActorCriticNetwork, action, obs, next_action, next_obs, reward, done, gamma
+):
+    curr_state_value = model.value(obs)[action]
+    next_state_value = model.value(next_obs)[next_action]
 
-    _, returns = jax.lax.scan(step_fn, 0.0, (rewards, mask), reverse=True)
-    return returns
-
-
-def run_episode(
-    model: ActorCriticNetwork, env, env_params, rng, steps: int = 500
-) -> dict:
-    # model.eval()
-    rng, rng_reset = jax.random.split(rng)
-    obs, state = env.reset(rng_reset, env_params)
-
-    def step_fn(carry, _):
-        obs, state, rng, done = carry
-        rng, action_selection_rng = jax.random.split(rng)
-        rng, step_rng = jax.random.split(rng)
-        action = model.sample_action(obs, action_selection_rng)
-        new_obs, new_state, reward, next_done, _ = env.step(
-            step_rng, state, action, env_params
-        )
-        valid_mask = 1 - done
-        new_carry = (new_obs, new_state, rng, jnp.maximum(done, next_done))
-        return new_carry, {
-            "reward": reward * valid_mask,
-            "valid_mask": valid_mask,
-            "action": action,
-            "obs": obs,
-        }
-
-    init_carry = (obs, state, rng, 0.0)
-    _, trajectories = jax.lax.scan(step_fn, init_carry, length=steps)
-    return trajectories
+    target_value = jax.lax.stop_gradient(reward + gamma * next_state_value * (1 - done))
+    return jax.lax.square(
+        target_value - curr_state_value
+    ), target_value - curr_state_value
 
 
-def normalize(val_arr, mask):
-    count = jnp.sum(mask) + 1e-8
-    mean = jnp.sum(val_arr * mask) / count
-    variance = jnp.sum(((val_arr - mean) ** 2) * mask) / count
-    std = jnp.sqrt(variance + 1e-8)
-    return jnp.divide(jnp.subtract(val_arr, mean), std)
+def actor_loss(model: ActorCriticNetwork, action, obs, advantage_value):
+    policy_value = nnx.log_softmax(model.policy(obs))[action]
+    return -jax.lax.stop_gradient(advantage_value) * policy_value
 
 
-def actor_critic_loss(model: ActorCriticNetwork, rewards, action, obs, valid_mask=None):
-    valid_mask = jnp.array(valid_mask)
-    returns = jax.vmap(calculate_returns, in_axes=(0, None, 0), out_axes=0)(
-        jnp.array(rewards), 0.99, valid_mask
+# def actor_critic_update(model: ActorCriticNetwork, optimizer: nnx.Optimizer, action, obs, next_action, next_obs, reward, done, gamma):
+#     grad, advantage_value = nnx.grad(critic_loss, argnums=0, has_aux=True)(model, action, obs, next_action, next_obs, reward, done, gamma)
+#     optimizer.update(model, grad)
+#     # return advantage_value
+#     grad = nnx.grad(actor_loss, argnums=0)(model, action, obs, advantage_value)
+#     optimizer.update(model, grad)
+
+
+def actor_critic_loss(
+    model: ActorCriticNetwork, action, obs, next_action, next_obs, reward, done, gamma
+):
+    curr_state_value = model.value(obs)[action]
+    next_state_value = model.value(next_obs)[next_action]
+
+    target_value = jax.lax.stop_gradient(reward + gamma * next_state_value * (1 - done))
+    critic_loss_val, advantage_value = (
+        jax.lax.square(target_value - curr_state_value),
+        target_value - curr_state_value,
     )
-    returns = jax.vmap(normalize, in_axes=(0, 0), out_axes=0)(returns, valid_mask)
-    returns = jax.lax.stop_gradient(returns)
-    action = jnp.array(action)
-    obs = jnp.stack(obs)
-    batches, runs = obs.shape[:2]
-    val_arr = model.vmap_value(obs)[..., 0]
-    log_logits = nnx.log_softmax(model.vmap_policy(obs))
-    # print(log_logits.shape, action.shape, obs.shape)
-    action_log_prob = jnp.take_along_axis(
-        log_logits, action.reshape(batches, runs, 1), axis=-1
-    )[..., 0]
 
-    advantage = returns - val_arr
+    probs = nnx.softmax(model.policy(obs))
+    log_probs = nnx.log_softmax(model.policy(obs))
+    entropy = -jax.numpy.sum(probs * log_probs)
+    actor_loss_val = (
+        -jax.lax.stop_gradient(advantage_value) * log_probs[action] - 0.01 * entropy
+    )
 
-    advantage = jax.lax.stop_gradient(normalize(advantage, valid_mask))
-
-    count = jnp.sum(valid_mask) + 1e-8
-
-    policy_loss = -jnp.sum(advantage * action_log_prob * valid_mask) / count
-
-    value_loss = jnp.sum(jnp.square(returns - val_arr) * valid_mask) / count
-
-    return value_loss * 0.5 + policy_loss
+    return critic_loss_val + actor_loss_val
 
 
-def actor_critic_update(model, optimizer, rewards, action, obs, valid_mask: Any = None):
+def actor_critic_update(
+    model, optimizer, action, obs, next_action, next_obs, reward, done, gamma
+):
     grad = nnx.grad(actor_critic_loss, argnums=0)(
-        model, rewards, action, obs, valid_mask
+        model, action, obs, next_action, next_obs, reward, done, gamma
     )
 
     optimizer.update(model, grad)
