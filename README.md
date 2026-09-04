@@ -27,7 +27,7 @@ This implementation uses an actor-critic network to learn CartPole-v1 with JAX a
 
 The episodic reward improves throughout training and approaches the CartPole reward limit of 50.
 
-![ActorCriticV2 batched learning](ActorCriticV2/assets/batched_learning.png)
+![ActorCriticV2 batched learning](ActorCritic/assets/batched_learning.png)
 
 ## Reinforce
 
