@@ -4,7 +4,6 @@ import numpy as np
 import jax
 import optax
 from flax import nnx
-from tqdm import tqdm
 from utils import actor_critic_update, run_episode
 
 env, env_params = make("CartPole-v1")
@@ -19,81 +18,6 @@ agent = ActorCriticNetwork(
 optimizer = nnx.Optimizer(
     agent, optax.chain(optax.clip_by_global_norm(1.0), optax.adam(3e-4)), wrt=nnx.Param
 )
-
-
-def train(model: ActorCriticNetwork, optimizer: nnx.Optimizer):
-    rng = jax.random.PRNGKey(0)
-    greedy_epsilon = 0.3
-    episodic_rewards = []
-    with tqdm(range(1000)) as pbar:
-        for i in pbar:
-            arr_obs = []
-            arr_action = []
-            arr_rewards = []
-            episodic_reward = 0
-            valid_mask = []
-            if i % 100 == 0:
-                greedy_epsilon = min(greedy_epsilon + 0.05, 0.91)
-            rng, reset_rng, action_rng = jax.random.split(rng, 3)
-            obs, state = env.reset(reset_rng, env_params)
-            # action = model.epsilon_greedy_strategy(obs, action_rng, greedy_epsilon)
-
-            while True:
-                rng, next_ac, step_key, ac = jax.random.split(rng, 4)
-                action, logits = model.epsilon_greedy_strategy(obs, ac, greedy_epsilon)
-                next_obs, next_state, reward, done, _ = env.step(
-                    step_key, state, action, env_params
-                )
-                arr_action.append(action)
-                arr_obs.append(obs)
-                arr_rewards.append(reward)
-                obs, state = next_obs, next_state
-                episodic_reward += reward
-                valid_mask.append(1 - done)
-                if done:
-                    break
-            actor_critic_update(
-                model,
-                optimizer,
-                arr_rewards,
-                arr_action,
-                arr_obs,
-                # valid_mask
-            )
-            episodic_rewards.append(episodic_reward)
-            pbar.set_description(f"{episodic_reward}")
-            # if episodic_reward >=490:
-            #     break
-    import matplotlib.pyplot as plt
-
-    plt.plot(np.arange(len(episodic_rewards)), episodic_rewards)
-    plt.show()
-
-
-def train_v2(model: ActorCriticNetwork, optimizer: nnx.Optimizer):
-    rng = jax.random.PRNGKey(0)
-    episodic_rewards = []
-    with tqdm(range(1000)) as pbar:
-        for i in pbar:
-            rng, episode_run = jax.random.split(rng)
-            trajectories = run_episode(model, env, env_params, episode_run)
-            actor_critic_update(
-                model,
-                optimizer,
-                trajectories.get("reward"),
-                trajectories.get("action"),
-                trajectories.get("obs"),
-                trajectories.get("valid_mask"),
-            )
-            episodic_reward = jax.numpy.sum(trajectories.get("reward"))
-            episodic_rewards.append(episodic_reward)
-            pbar.set_description(f"{episodic_reward}")
-            # if episodic_reward >=490:
-            #     break
-    import matplotlib.pyplot as plt
-
-    plt.plot(np.arange(len(episodic_rewards)), episodic_rewards)
-    plt.show()
 
 
 def train_v3(model: ActorCriticNetwork, optimizer: nnx.Optimizer):
