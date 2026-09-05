@@ -6,13 +6,13 @@ import jax
 from jax import numpy as jnp
 
 
-def calculate_returns(rewards, gamma: float = 0.99, mask=None):
+def calculate_returns(rewards, last_val, gamma: float = 0.99, mask=None):
     def step_fn(R, data):
         reward, mask = data
         R = reward + R * gamma * mask
         return R, R
 
-    _, returns = jax.lax.scan(step_fn, 0.0, (rewards, mask), reverse=True)
+    _, returns = jax.lax.scan(step_fn, last_val, (rewards, mask), reverse=True)
     return returns
 
 
@@ -41,8 +41,8 @@ def run_episode(
         }
 
     init_carry = (obs, state, rng, 0.0)
-    _, trajectories = jax.lax.scan(step_fn, init_carry, length=steps)
-    return trajectories
+    final_state, trajectories = jax.lax.scan(step_fn, init_carry, length=steps)
+    return final_state[0], trajectories
 
 
 def normalize(val_arr, mask):
@@ -53,10 +53,12 @@ def normalize(val_arr, mask):
     return jnp.divide(jnp.subtract(val_arr, mean), std)
 
 
-def actor_critic_loss(model: ActorCriticNetwork, rewards, action, obs, valid_mask=None):
+def actor_critic_loss(
+    model: ActorCriticNetwork, rewards, action, obs, valid_mask=None, last_obs=None
+):
     valid_mask = jnp.array(valid_mask)
-    returns = jax.vmap(calculate_returns, in_axes=(0, None, 0), out_axes=0)(
-        jnp.array(rewards), 0.99, valid_mask
+    returns = jax.vmap(calculate_returns, in_axes=(0, 0, None, 0), out_axes=0)(
+        jnp.array(rewards), model.value(last_obs)[..., 0], 0.99, valid_mask
     )
     returns = jax.vmap(normalize, in_axes=(0, 0), out_axes=0)(returns, valid_mask)
     returns = jax.lax.stop_gradient(returns)
@@ -83,9 +85,11 @@ def actor_critic_loss(model: ActorCriticNetwork, rewards, action, obs, valid_mas
     return value_loss * 0.5 + policy_loss
 
 
-def actor_critic_update(model, optimizer, rewards, action, obs, valid_mask: Any = None):
+def actor_critic_update(
+    model, optimizer, rewards, action, obs, valid_mask: Any = None, last_obs=None
+):
     grad = nnx.grad(actor_critic_loss, argnums=0)(
-        model, rewards, action, obs, valid_mask
+        model, rewards, action, obs, valid_mask, last_obs
     )
 
     optimizer.update(model, grad)

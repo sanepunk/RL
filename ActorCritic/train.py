@@ -41,7 +41,9 @@ def train_v3(model: ActorCriticNetwork, optimizer: nnx.Optimizer):
         #     env_params,
         #     episode_run
         # )
-        trajectories = vmapped_run_episode(model, jax.random.split(episode_run, 50))
+        last_obs, trajectories = vmapped_run_episode(
+            model, jax.random.split(episode_run, 50)
+        )
 
         actor_critic_update(
             model,
@@ -50,12 +52,15 @@ def train_v3(model: ActorCriticNetwork, optimizer: nnx.Optimizer):
             trajectories.get("action"),
             trajectories.get("obs"),
             trajectories.get("valid_mask"),
+            last_obs,
         )
         # print(trajectories.get("reward").shape)
         # exit(0)
-
-        episodic_reward = jax.numpy.sum(
-            jax.numpy.mean(trajectories.get("reward"), axis=1)
+        # rewards = jax.numpy.array(trajectories.get("reward"))
+        # print("rewards.shape =", rewards.shape)
+        # exit()
+        episodic_reward = jax.numpy.mean(
+            jax.numpy.sum(trajectories.get("reward"), axis=-1)
         )
 
         episodic_rewards = episodic_rewards.at[i].set(episodic_reward)
